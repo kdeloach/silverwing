@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<form class="form-horizontal" method="post" action="{{ request.path }}">
+  <fieldset>
+    <legend>
+    {% if not element.id %}
+      New Element
+    {% else %}
+      {{ element.name }}
+    {% end %}
+    </legend>
+    <div class="control-group">
+      <label class="control-label" for="name">Name</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="name" id="name" value="{{ element.name }}" />
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="pyclass">PyClass</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="pyclass" id="pyclass" value="{{ element.pyclass }}" />
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Attributes</label>
+      <div class="controls">
+        <p><a href="" class="btn">Add Attribute</a></p>
+        <table class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Default Value</th>
+              <th>Default Text</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for a in element.attributes %}
+            <tr>
+              <td><input type="text" name="" value="{{ a.name }}" /></td>
+              <td><input type="text" name="" value="{{ v(a.defaultValue) }}" /></td>
+              <td><textarea name="">{{ v(a.defaultText) }}</textarea></td>
+            </tr>            
+          {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </fieldset>
+  <div class="form-actions">
+    <button type="submit" name="save" class="btn btn-primary">Save changes</button>
+    <a href="/elements" class="btn">Cancel</a>
+  </div>
+</form>
+{% end %}

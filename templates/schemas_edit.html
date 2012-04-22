@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<form class="form-horizontal" method="post" action="{{ request.path }}">
+  <fieldset>
+    <legend>
+    {% if not schema.id %}
+      New Schema
+    {% else %}
+      {{ schema.name }}
+    {% end %}
+    </legend>
+    <div class="control-group">
+      <label class="control-label" for="name">Name</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="name" id="name" value="{{ schema.name }}" />
+      </div>
+    </div>
+  </fieldset>
+  <div class="form-actions">
+    <button type="submit" name="save" class="btn btn-primary">Save changes</button>
+    <a href="/schemas" class="btn">Cancel</a>
+  </div>
+</form>
+{% end %}

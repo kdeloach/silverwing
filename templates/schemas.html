@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<p>
+  <a href="/schemas/new" class="btn">Create Schema</a>
+</p>
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>Name</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for s in schemas %}
+    <tr>
+      <td><a href="/schemas/{{ s.id }}">{{ s.name }}</a></td>
+    </tr>
+  {% end %}
+  <tbody>
+</table>
+{% end %}
