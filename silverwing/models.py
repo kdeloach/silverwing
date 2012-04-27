@@ -63,6 +63,12 @@ class Attribute(Base):
     defaultText = Column(Text)
     created = Column(DateTime, default=datetime.utcnow)
     
+    def type(self):
+        if self.defaultValue:
+            return 'value'
+        else:
+            return 'text'
+    
 class Template(Base):
     __tablename__ = 'template'
     id = Column(Integer, primary_key=True)

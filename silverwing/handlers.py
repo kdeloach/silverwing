@@ -1,6 +1,9 @@
 ﻿from tornado.web import HTTPError, RequestHandler
 from .database import Session
 from .models import Element, Attribute, Schema, Document
+from .gists import FlashMessageMixin
+from .util import DotExpandedDict
+from pprint import pprint
     
 class IndexHandler(RequestHandler):
     def get(self):
@@ -36,20 +39,45 @@ class SchemasHandler(RequestHandler):
             schemas = session.query(Schema).all()
             self.render('schemas.html', schemas=schemas)
         
-class ElementsHandler(RequestHandler):
+class ElementsHandler(RequestHandler, FlashMessageMixin):
     def get(self, action=None):
         if action:
+            m = self.get_flash_message('m')
             element = Element(name='', pyclass='', attributes=[])
             try:
                 session = Session()
                 element = session.query(Element).filter(Element.id == action).one()
             except:
                 pass
-            self.render('elements_edit.html', element=element)
+            self.render('elements_edit.html', element=element, m=m)
         else:
             session = Session()
             elements = session.query(Element).all()
             self.render('elements.html', elements=elements)
+            
+    def post(self, action):
+        session = Session()
+        element = Element(name='', pyclass='', attributes=[])
+        try:
+            element = session.query(Element).filter(Element.id == action).one()
+        except:
+            element = Element()
+            session.add(element)
+        element.name = self.get_argument('name')
+        element.pyclass = self.get_argument('pyclass')
+        element.attributes = []
+        expanded = DotExpandedDict(self.request.arguments)
+        if 'attrs' in expanded:
+            for item in expanded['attrs'].values():
+                attr = Attribute(name=item['name'][0])
+                if item['type'][0] == 'value':
+                    attr.defaultValue=item['defaultValue'][0]
+                else:
+                    attr.defaultText=item['defaultText'][0]
+                element.attributes.append(attr)
+        session.commit()
+        self.set_flash_message('m', 'Saved')
+        self.redirect('/elements/%s' % action)
         
 class VuzeHandler(RequestHandler):
     """Prevent Vuze discovery service noise in console"""

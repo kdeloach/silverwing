@@ -15,3 +15,14 @@ def v(handler, str):
     if not str:
         return ''
     return str
+    
+def htmlselectoptions(handler, opts, selected=None):
+    """opts is a list of tuples containing value/name pairs"""
+    result = ''
+    for k, v in opts:
+        result += '<option value="%s"' % k
+        if k == selected:
+            result += ' selected="selected"'
+        result += '>%s</option>' % v
+    return result
+        
