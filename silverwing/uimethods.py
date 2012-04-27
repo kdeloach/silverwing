@@ -1,5 +1,6 @@
 import os
 import os.path
+from .util import tojson as js
 
 def partial(handler, name, **kwargs):
     filename = os.path.join(handler.settings['template_path'], name.replace(':', os.sep))
@@ -26,3 +27,5 @@ def htmlselectoptions(handler, opts, selected=None):
         result += '>%s</option>' % v
     return result
         
+def tojson(handler, obj):
+    return js(obj)

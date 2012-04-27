@@ -6,30 +6,24 @@
 {% end %}
 <form class="form-horizontal" method="post" action="{{ request.path }}">
   <fieldset>
-    <legend>
-    {% if not element.id %}
-      New Element
-    {% else %}
-      {{ element.name }}
-    {% end %}
-    </legend>
+    <legend><div class="form-legend"></div></legend>
     <div class="control-group">
       <label class="control-label" for="name">Name</label>
       <div class="controls">
-        <input type="text" class="input-xlarge" name="name" id="name" value="{{ element.name }}" />
+        <input type="text" class="input-xlarge e-name" name="name" id="name" />
       </div>
     </div>
     <div class="control-group">
       <label class="control-label" for="pyclass">PyClass</label>
       <div class="controls">
-        <input type="text" class="input-xlarge" name="pyclass" id="pyclass" value="{{ element.pyclass }}" />
+        <input type="text" class="input-xlarge e-class" name="pyclass" id="pyclass" />
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Attributes</label>
       <div class="controls">
         <p><a href="" class="btn btn-add-attr"><i class="icon-plus-sign"></i> Add Attribute</a></p>
-        <table class="table table-striped table-bordered {% if not len(element.attributes) %}hide{% end %}" id="tbl-attrs">
+        <table class="table table-striped table-bordered" id="tbl-attrs">
           <thead>
             <tr>
               <th>Name</th>
@@ -39,25 +33,6 @@
             </tr>
           </thead>
           <tbody>
-          {% for i, a in enumerate(element.attributes) %}
-            <tr>
-              <td><input type="text" name="attrs.{{ i }}.name" value="{{ a.name }}" /></td>
-              <td>
-                <select name="attrs.{{ i }}.type" onchange="attrTypeChange(this, '.a{{ i }}')">
-                  {{ htmlselectoptions([('value', 'Value (100 char limit)'), ('text', 'Text')], a.type()) }}
-                </select>
-              </td>
-              <td>
-                <div class="attr-value a{{ i }} {% if a.type() != 'value' %}hide{% end %}">
-                  <textarea name="attrs.{{ i }}.defaultValue">{{ v(a.defaultValue) }}</textarea></div>
-                <div class="attr-text a{{ i }} {% if a.type() != 'text' %}hide{% end %}">
-                  <textarea name="attrs.{{ i }}.defaultText">{{ v(a.defaultText) }}</textarea></div>
-              </td>
-              <td>
-                <a href="" class="btn-remove-attr"><i class="icon-minus-sign"></i></a>
-              </td>
-            </tr>            
-          {% end %}
           </tbody>
         </table>
       </div>
@@ -72,47 +47,12 @@
 
 {% block scripts %}
 <script type="text/javascript">
-
-var view = new silverwing.ElementEditView({
-    model: new silverwing.Element()
-});
 $(function() {
-    var n = {{ len(element.attributes) }};
-    $('.btn-add-attr').click(function(e) {
-        e.preventDefault();
-        $('#tbl-attrs').show();
-        $('#tbl-attrs').append($('' +
-            '<tr>' +
-            '  <td><input type="text" name="attrs.' + n + '.name" /></td>' +
-            '  <td>' +
-            '    <select name="attrs.' + n + '.type" onchange="attrTypeChange(this, \'.a' + n + '\')">' +
-            '      {{ htmlselectoptions([('value', 'Value (100 char limit)'), ('text', 'Text')], 'value') }}' +
-            '    </select>' +
-            '  </td>' +
-            '  <td>' +
-            '    <div class="attr-value a' + n + '">' +
-            '      <textarea name="attrs.' + n + '.defaultValue"></textarea></div>' +
-            '    <div class="attr-text a' + n + ' hide">' +
-            '      <textarea name="attrs.' + n + '.defaultText"></textarea></div>' +
-            '  </td>' +
-            '  <td>' +
-            '    <a href="" class="btn-remove-attr"><i class="icon-minus-sign"></i></a>' +
-            '  </td>' +
-            '</tr>'));
-        n += 1;
-    });
-    $('.btn-remove-attr').live('click', function(e) {
-        e.preventDefault();
-        $(e.currentTarget).parents('tr').remove();
-        if($('#tbl-attrs tbody tr').size() == 0) {
-            $('#tbl-attrs').hide();
-        }
+    new ElementEditView({
+        el: $('form'),
+        attributesEl: $('#tbl-attrs'),
+        model: new Element({% if element.id %}{{ tojson(element) }}{% end %})
     });
 });
-
-function attrTypeChange(elem, attrClass) {
-    $('.attr-value' + attrClass).toggleClass('hide');
-    $('.attr-text' + attrClass).toggleClass('hide');
-}
 </script>
 {% end %}

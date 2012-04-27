@@ -54,6 +54,13 @@ class Element(Base):
     created = Column(DateTime, default=datetime.utcnow)
     attributes = relationship('Attribute', backref='element')
     
+    def jsonObj(self):
+        return dict(id=self.id, 
+                    name=self.name, 
+                    pyclass=self.pyclass, 
+                    created=self.created,
+                    attributes=[a.jsonObj() for a in self.attributes])
+    
 class Attribute(Base):
     __tablename__ = 'attribute'
     id = Column(Integer, primary_key=True)
@@ -68,6 +75,14 @@ class Attribute(Base):
             return 'value'
         else:
             return 'text'
+            
+    def jsonObj(self):
+        return dict(id=self.id, 
+                    name=self.name, 
+                    defaultValue=self.defaultValue, 
+                    defaultText=self.defaultText,
+                    created=self.created,
+                    type=self.type())
     
 class Template(Base):
     __tablename__ = 'template'

@@ -1,6 +1,7 @@
 import tornado
 from tornado.options import options, define
 import os
+import simplejson
 
 # Source: http://stackoverflow.com/a/452981/40
 def get_class(kls):
@@ -69,3 +70,16 @@ class DotExpandedDict(dict):
                 current[bits[-1]] = v
             except TypeError: # Special-case if current isn't a dict.
                 current = {bits[-1]: v}
+
+def jsonencoder(obj):
+    """Needed to encode complex objects for JSON reponses"""
+    if(hasattr(obj, '__dict__')):
+        return obj.__dict__
+    return None
+    
+def tojson(obj):
+    try:
+        return simplejson.dumps(obj.jsonObj(), default=jsonencoder)
+    except AttributeError:
+        pass
+    return simplejson.dumps(obj, default=jsonencoder)
