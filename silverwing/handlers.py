@@ -64,7 +64,7 @@ class ElementsHandler(RequestHandler, FlashMessageMixin):
             element = Element()
             session.add(element)
         element.name = self.get_argument('name')
-        element.pyclass = self.get_argument('pyclass')
+        element.pyclass = self.get_argument('pyclass', '')
         element.attributes = []
         expanded = DotExpandedDict(self.request.arguments)
         if 'attrs' in expanded:
@@ -83,7 +83,21 @@ class ElementsHandler(RequestHandler, FlashMessageMixin):
         session.commit()
         self.set_flash_message('m', 'Saved')
         self.redirect('/elements/%s' % action)
+
+    def delete(self, action):
+        session = Session()
+        element = Element(name='', pyclass='', attributes=[])
+        try:
+            element = session.query(Element).filter(Element.id == action).one()
+            session.delete(element)
+            session.commit()
+        except:
+            raise
         
+class AttributesHandler(RequestHandler):
+    def delete(self):
+        pass
+     
 class VuzeHandler(RequestHandler):
     """Prevent Vuze discovery service noise in console"""
     def get(self):

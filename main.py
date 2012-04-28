@@ -3,7 +3,8 @@ import tornado.ioloop
 from tornado.options import options
 import os
 
-from silverwing.handlers import IndexHandler, DocumentsHandler, SchemasHandler, ElementsHandler, VuzeHandler
+from silverwing.handlers import IndexHandler, DocumentsHandler, SchemasHandler
+from silverwing.handlers import ElementsHandler, AttributesHandler, VuzeHandler
 import silverwing.uimethods
 from silverwing.util import load_options
 from silverwing.bootstrap import bootstrap
@@ -34,6 +35,7 @@ routes = [
     (r"/schemas/(.[^/]*)/?", SchemasHandler),
     (r"/elements/?", ElementsHandler),
     (r"/elements/(.[^/]*)/?", ElementsHandler),
+    (r"/attributes/\d+/?", AttributesHandler),
     (r"/.*", IndexHandler)
 ]
             

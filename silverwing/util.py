@@ -2,6 +2,7 @@ import tornado
 from tornado.options import options, define
 import os
 import simplejson
+from pprint import pprint
 
 # Source: http://stackoverflow.com/a/452981/40
 def get_class(kls):
@@ -73,13 +74,11 @@ class DotExpandedDict(dict):
 
 def jsonencoder(obj):
     """Needed to encode complex objects for JSON reponses"""
+    if(hasattr(obj, 'jsonObj')):
+        return obj.jsonObj()
     if(hasattr(obj, '__dict__')):
         return obj.__dict__
     return None
     
 def tojson(obj):
-    try:
-        return simplejson.dumps(obj.jsonObj(), default=jsonencoder)
-    except AttributeError:
-        pass
     return simplejson.dumps(obj, default=jsonencoder)
