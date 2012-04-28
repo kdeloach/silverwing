@@ -9,6 +9,7 @@
     <tr>
       <th>Name</th>
       <th>Class</th>
+      <th>Attributes</th>
     </tr>
   </thead>
   <tbody>
@@ -16,6 +17,9 @@
     <tr>
       <td><a href="/elements/{{ e.id }}">{{ e.name }}</a></td>
       <td>{{ e.pyclass }}</td>
+      <td>
+        {{ ', '.join([a.name for a in e.attributes]) }}
+      </td>
     </tr>
   {% end %}
   <tbody>

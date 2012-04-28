@@ -52,7 +52,7 @@ class Element(Base):
     name = Column(String(40))
     pyclass = Column(String(40))
     created = Column(DateTime, default=datetime.utcnow)
-    attributes = relationship('Attribute', backref='element')
+    attributes = relationship('Attribute', backref='element', order_by=lambda: Attribute.name)
     
     def jsonObj(self):
         return dict(id=self.id, 

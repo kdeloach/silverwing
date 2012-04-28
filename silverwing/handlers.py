@@ -69,11 +69,16 @@ class ElementsHandler(RequestHandler, FlashMessageMixin):
         expanded = DotExpandedDict(self.request.arguments)
         if 'attrs' in expanded:
             for item in expanded['attrs'].values():
-                attr = Attribute(name=item['name'][0])
-                if item['type'][0] == 'value':
-                    attr.defaultValue=item['defaultValue'][0]
+                name = item['name'][0] if 'name' in item else None
+                type = item['type'][0] if 'type' in item else 'value'
+                defaultVal = item['default'][0] if 'default' in item else ''
+                if not name:
+                    continue
+                attr = Attribute(name=name)
+                if type == 'value':
+                    attr.defaultValue = defaultVal
                 else:
-                    attr.defaultText=item['defaultText'][0]
+                    attr.defaultText = defaultVal
                 element.attributes.append(attr)
         session.commit()
         self.set_flash_message('m', 'Saved')
