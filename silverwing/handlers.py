@@ -82,7 +82,7 @@ class ElementsHandler(RequestHandler, FlashMessageMixin):
                 element.attributes.append(attr)
         session.commit()
         self.set_flash_message('m', 'Saved')
-        self.redirect('/elements/%s' % action)
+        self.redirect('/elements/%s' % element.id)
 
     def delete(self, action):
         session = Session()
