@@ -79,10 +79,9 @@ class Attribute(Base):
     def jsonObj(self):
         return dict(id=self.id, 
                     name=self.name, 
-                    defaultValue=self.defaultValue, 
-                    defaultText=self.defaultText,
-                    created=self.created,
-                    type=self.type())
+                    type=self.type(),
+                    defaultVal=self.defaultValue if self.type() == 'value' else self.defaultText, 
+                    created=self.created)
     
 class Template(Base):
     __tablename__ = 'template'

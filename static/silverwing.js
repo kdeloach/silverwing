@@ -2,17 +2,13 @@
 var Attribute = Backbone.Model.extend({
     defaults: {
         name: '',
-        defaultValue: '',
-        defaultText: '',
+        defaultVal: '',
         'type': 'value'
     },
     
     initialize: function() {
-        if(!this.get('defaultValue')) {
-            this.set('defaultValue', this.defaults.defaultValue);
-        }
-        if(!this.get('defaultText')) {
-            this.set('defaultText', this.defaults.defaultText);
+        if(!this.get('defaultVal')) {
+            this.set('defaultVal', this.defaults.defaultVal);
         }
     }
 });
@@ -39,7 +35,6 @@ var AttributeEditRowView = Backbone.View.extend({
     tagName: 'tr',
     events: {
         'change .a-update': 'updateModel',
-        'change .a-type': 'render',
         'click .btn-remove-attr': 'removeAttr'
     },
     
@@ -56,10 +51,8 @@ var AttributeEditRowView = Backbone.View.extend({
             '    </select>' +
             '  </td>' +
             '  <td>' +
-            '    <div class="attr-value ' + this.model.cid + ' ' + (isText ? 'hide' : '') + '">' +
-            '      <textarea name="' + prefix + 'defaultValue" class="a-defaultValue a-update">' + this.model.get('defaultValue') + '</textarea></div>' +
-            '    <div class="attr-text ' + this.model.cid + ' ' + (isValue ? 'hide' : '') + '">' +
-            '      <textarea name="' + prefix + 'defaultText" class="a-defaultText a-update">' + this.model.get('defaultText') + '</textarea></div>' +
+            '    <div class="attr-default ' + this.model.cid + '">' +
+            '      <textarea name="' + prefix + 'default" class="a-default a-update">' + this.model.get('defaultVal') + '</textarea></div>' +
             '  </td>' +
             '  <td>' +
             '    <a href="" class="btn-remove-attr"><i class="icon-minus-sign"></i></a>' +
@@ -71,8 +64,7 @@ var AttributeEditRowView = Backbone.View.extend({
         this.model.set({
             name: this.$('.a-name').val(),
             type: this.$('.a-type').val(),
-            defaultValue: this.$('.a-defaultValue').val(),
-            defaultText: this.$('.a-defaultText').val()
+            defaultVal: this.$('.a-default').val()
         });
     },
     
