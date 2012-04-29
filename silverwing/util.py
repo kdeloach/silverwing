@@ -35,6 +35,8 @@ def load_options():
     define('dsn', help='database connection string')
     define('echosql', help='output sql to console', default=True)
     define('bootstrap', help='rebuild database and default values', default=False)
+    define('static_path')
+    define('template_path')
     tornado.options.parse_config_file(os.path.join(root, 'site.conf'))
     tornado.options.parse_command_line()
     

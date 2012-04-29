@@ -15,10 +15,9 @@ if options.bootstrap:
     bootstrap()
     exit()
 
-root = os.path.abspath(os.path.dirname(__file__))  
 settings = {
-    'static_path': os.path.join(root, 'static'),
-    'template_path': os.path.join(root, 'templates'),
+    'static_path': options.static_path,
+    'template_path': options.template_path,
     'ui_methods': silverwing.uimethods,
     'cookie_secret': options.cookie_secret,
     'autoescape': None,

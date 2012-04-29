@@ -3,6 +3,7 @@ from sqlalchemy import Table, Column, ForeignKey, Integer, String, DateTime, Tex
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql.expression import and_
 from .database import Base
+from .util import get_class
 
 class Document(Base):
     __tablename__ = 'document'
@@ -49,17 +50,33 @@ class Schema_Element(Base):
 class Element(Base):
     __tablename__ = 'element'
     id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('element.id'))
     name = Column(String(40))
     pyclass = Column(String(40))
     created = Column(DateTime, default=datetime.utcnow)
     attributes = relationship('Attribute', backref='element', order_by=lambda: Attribute.name)
+    elements = relationship('Element')
     
+    def getAttributes(self):
+        """Return supported attrs; Ignore non-supported attrs"""
+        if not self.pyclass:
+            return self.attributes
+        inst = get_class(self.pyclass)
+        validattrs = [a.name for a in inst.attrs]
+        result = []
+        for a in self.attributes:
+            if a.name in validattrs:
+                result.append(a)
+                validattrs.remove(a.name)
+        result += [Attribute(name=a, defaultValue='') for a in validattrs]
+        return result
+        
     def jsonObj(self):
-        return dict(id=self.id, 
-                    name=self.name, 
-                    pyclass=self.pyclass, 
-                    created=self.created,
-                    attributes=[a.jsonObj() for a in self.attributes])
+        return dict(id=self.id,
+                    name=self.name,
+                    pyclass=self.pyclass,
+                    attributes=[a.jsonObj() for a in self.getAttributes()],
+                    elements=[e.jsonObj() for e in self.elements])
     
 class Attribute(Base):
     __tablename__ = 'attribute'
@@ -67,21 +84,12 @@ class Attribute(Base):
     element_id = Column(Integer, ForeignKey('element.id'))
     name = Column(String(40))
     defaultValue = Column(String(100))
-    defaultText = Column(Text)
     created = Column(DateTime, default=datetime.utcnow)
     
-    def type(self):
-        if self.defaultValue:
-            return 'value'
-        else:
-            return 'text'
-            
     def jsonObj(self):
-        return dict(id=self.id, 
-                    name=self.name, 
-                    type=self.type(),
-                    defaultVal=self.defaultValue if self.type() == 'value' else self.defaultText, 
-                    created=self.created)
+        return dict(id=self.id,
+                    name=self.name,
+                    defaultValue=self.defaultValue)
     
 class Template(Base):
     __tablename__ = 'template'

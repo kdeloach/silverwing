@@ -6,12 +6,12 @@
 var Attribute = Backbone.Model.extend({
     defaults: {
         name: '',
-        defaultVal: '',
+        defaultValue: '',
         'type': 'value'
     },
     initialize: function() {
-        if(!this.get('defaultVal')) {
-            this.set('defaultVal', this.defaults.defaultVal);
+        if(!this.get('defaultValue')) {
+            this.set('defaultValue', this.defaults.defaultValue);
         }
     }
 });
@@ -22,16 +22,22 @@ var AttributeList = Backbone.Collection.extend({
 });
 
 var Element = Backbone.Model.extend({
-    defaults: {
-        name: 'New Element',
-        pyclass: '',
-        attributes: new AttributeList(),
-        'checked': false
+    defaults: function() {
+        return {
+            name: '',
+            pyclass: '',
+            attributes: new AttributeList(),
+            elements: new ElementList(),
+            'checked': false
+        };
     },
     initialize: function(data) {
         data = _.defaults(data || {}, this.defaults);
         if(data['attributes'] && _.isArray(data['attributes'])) {
             this.set('attributes', new AttributeList(data['attributes']));
+        }
+        if(data['elements'] && _.isArray(data['elements'])) {
+            this.set('elements', new ElementList(data['elements']));
         }
     }
 });
@@ -46,101 +52,114 @@ var ElementList = Backbone.Collection.extend({
 // Views
 //
 
-var AttributeEditRowView = Backbone.View.extend({
-    model: Attribute,
+var ElementEditView_AttributeRowView = Backbone.View.extend({
+    model: AttributeList,
+    render: function() {
+        var self = this;
+        this.$el.html('');
+        this.model.each(function(attr) {
+            self.$el.append('<tr>' +
+                '  <td>' + attr.get('name') + '</td>' +
+                '  <td><textarea name="attrs.' + attr.get('name') + '">' + attr.get('defaultValue') + '</textarea></td>' +
+                '</tr>');
+        });
+        return this;
+    }
+});
+
+var ElementEditView_ElementItemRowView = Backbone.View.extend({
+    model: Element,
     tagName: 'tr',
     events: {
-        'change .a-update': 'updateModel',
-        'click .btn-remove-attr': 'removeAttr'
+        'click .btnDelete': 'deleteModel',
+        'change .name, .pyclass': 'updateModel'
     },
     render: function() {
-        var isValue = this.model.get('type') == 'value';
-        var isText = this.model.get('type') == 'text';
-        var prefix = 'attrs.' + this.model.cid + '.';
+        var self = this;
+        var htmloptions = this.options.allElements.map(function(elem) {
+            return '<option value="' + elem.get('id') + '"' +
+                (elem.get('id') == self.model.get('id') ? ' selected="selected"' : '') +
+                '>' + elem.get('name') + '</option>';
+        });
         this.$el.html('' +
-            '<td><input type="text" name="' + prefix + 'name" class="a-name a-update" value="' + this.model.get('name') + '" /></td>' +
-            '<td>' +
-            '  <select name="' + prefix + 'type" class="a-type a-update">' +
-            '    <option value="value" ' + (isValue ? 'selected="selected"' : '') + '>Value (100 char limit)</option>' +
-            '    <option value="text" ' + (isText ? 'selected="selected"' : '') + '>Text</option>' +
-            '  </select>' +
-            '</td>' +
-            '<td>' +
-            '  <div class="attr-default ' + this.model.cid + '">' +
-            '    <textarea name="' + prefix + 'default" class="a-default a-update">' + this.model.get('defaultVal') + '</textarea></div>' +
-            '</td>' +
-            '<td>' +
-            '  <a href="" class="btn-remove-attr"><i class="icon-minus-sign"></i></a>' +
-            '</td>');
+                '<td><input type="text" name="elems.' + this.model.cid + '.name" class="name" value="' + this.model.get('name') + '" /></td>' +
+                '<td>' +
+                '  <select name="elems.' + this.model.cid + '.pyclass" class="pyclass">' + htmloptions + '</select>' +
+                '</td>' +
+                '<td style="text-align:center;">' +
+                '  <a href="" class="btnDelete"><i class="icon-minus-sign"></i></a>' +
+                '</td>');
         return this;
     },
     updateModel: function(e) {
         this.model.set({
-            name: this.$('.a-name').val(),
-            type: this.$('.a-type').val(),
-            defaultVal: this.$('.a-default').val()
+            name: this.$('.name').val(),
+            pyclass: this.$('.pyclass').val()
         });
     },
-    removeAttr: function(e) {
+    deleteModel: function(e) {
         e.preventDefault();
         this.model.destroy();
     }
 });
-    
-var AttributeListEditView = Backbone.View.extend({
-    model: AttributeList,
+var ElementEditView_ElementRowView = Backbone.View.extend({
+    model: ElementList,
+    events: {
+        'click .btnAddElem': 'addElem'
+    },
+    initialize: function() {
+        this.model.bind('add', this.render, this);
+        this.model.bind('destroy', this.render, this);
+    },
     render: function() {
-        self = this;
+        var self = this;
         this.$el.html('');
-        this.model.each(function(attr) {
-            self.$el.append((new AttributeEditRowView({model: attr})).render().el);
+        this.model.each(function(model) {
+            var view = new ElementEditView_ElementItemRowView({
+                model: model,
+                allElements: self.options.allElements
+            });
+            self.$el.append(view.render().el);
         });
+        this.$el.append('<tr><td colspan="3"><a href="" class="btn btnAddElem"><i class="icon-plus-sign"></i> Add Element</a></td></tr>');
         return this;
+    },
+    addElem: function(e) {
+        e.preventDefault();
+        this.model.add(new Element());
     }
 });
 
 var ElementEditView = Backbone.View.extend({
     model: Element,
     events: {
-        'click .btn-add-attr': 'addAttr',
-        'change .e-name': 'updateName'
+        'change #pyclass': 'render'
     },
     initialize: function() {
-        this.formLegend = this.$('.form-legend');
-        this.elementName = this.$('.e-name');
-        this.elementClass = this.$('.e-class');
         this.attrsTbody = this.options.attributesEl.children('tbody');
-
-        this.model.bind('change', this.render, this);
-        this.model.get('attributes').bind('add', this.render, this);
-        this.model.get('attributes').bind('remove', this.render, this);
-        
+        this.pyclass = this.$('#pyclass');
         this.render();
     },
     render: function() {
-        this.formLegend.html(this.model.escape('name'));
-        this.elementName.val(this.model.get('name'));
-        this.elementClass.val(this.model.get('pyclass'));
-        
-        new AttributeListEditView({
+        var self = this;
+        var selected = this.options.allClasses.where({pyclass: this.pyclass.val()});
+        selected = selected[0];
+        var view = new ElementEditView_AttributeRowView({
             el: this.attrsTbody,
-            model: this.model.get('attributes')
-        }).render();
-        
-        if(this.model.get('attributes').length == 0) {
-            this.options.attributesEl.hide();
+            model: selected.get('pyclass') == this.model.get('pyclass') ? this.model.get('attributes') : selected.get('attributes')});
+        view.render();
+        if(selected.get('pyclass') == 'silverwing.elements.Group') {
+            this.options.subElemsEl.show();
+            var view = new ElementEditView_ElementRowView({
+                el: this.options.subElemsEl.find('tbody'),
+                model: this.model.get('elements'),
+                allElements: this.options.allElements});
+            view.render();
         } else {
-            this.options.attributesEl.show();
+            this.options.subElemsEl.find('tbody').html('');
+            this.options.subElemsEl.hide();
         }
-        
         return this;
-    },
-    updateName: function(e) {
-        this.model.set('name', $(e.target).val());
-    },
-    addAttr: function(e) {
-        e.preventDefault();
-        this.model.get('attributes').add(new Attribute());
     }
 });
 
@@ -151,13 +170,9 @@ var ElementRowView = Backbone.View.extend({
         'change .e-update': 'updateModel'
     },
     render: function() {
-        var attrNames = this.model.get('attributes').models.map(function(attr) {
-            return attr.get('name');
-        });
         this.$el.html('' +
             '<td><a href="/elements/' + this.model.get('id') + '">' + this.model.get('name') + '</a></td>' +
             '<td>' + this.model.get('pyclass') + '</td>' +
-            '<td>' + attrNames.join(', ') + '</td>' +
             '<td style="text-align:center;">' +
             '  <input type="checkbox" class="e-update e-checked" name="elems.' + this.model.get('id') + '" />' +
             '</td>');

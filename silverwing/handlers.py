@@ -1,8 +1,9 @@
 ﻿from tornado.web import HTTPError, RequestHandler
 from .database import Session
-from .models import Element, Attribute, Schema, Document
+from .elements import BaseElement
 from .gists import FlashMessageMixin
-from .util import DotExpandedDict
+from .models import Element, Attribute, Schema, Document
+from .util import DotExpandedDict, inheritors
 from pprint import pprint
     
 class IndexHandler(RequestHandler):
@@ -49,7 +50,13 @@ class ElementsHandler(RequestHandler, FlashMessageMixin):
                 element = session.query(Element).filter(Element.id == action).one()
             except:
                 pass
-            self.render('elements_edit.html', element=element, m=m)
+            # list of all element classes and attributes
+            classes = [Element(pyclass=cls.__module__ + '.' + cls.__name__, \
+                attributes=[Attribute(name=a.name, defaultValue='') for a in cls.attrs]) for cls in inheritors(BaseElement)]
+            # list of all element id's and name's to use on Group Element dropdowns
+            elements = [Element(id=id, name=name) for (id, name) in \
+                session.query(Element).filter(Element.id != action).values(Element.id, Element.name)]
+            self.render('elements_edit.html', element=element, elements=elements, classes=classes, m=m)
         else:
             session = Session()
             elements = session.query(Element).all()
@@ -68,17 +75,10 @@ class ElementsHandler(RequestHandler, FlashMessageMixin):
         element.attributes = []
         expanded = DotExpandedDict(self.request.arguments)
         if 'attrs' in expanded:
-            for item in expanded['attrs'].values():
-                name = item['name'][0] if 'name' in item else None
-                type = item['type'][0] if 'type' in item else 'value'
-                defaultVal = item['default'][0] if 'default' in item else ''
-                if not name:
-                    continue
+            for name in expanded['attrs']:
+                item = expanded['attrs'][name]
                 attr = Attribute(name=name)
-                if type == 'value':
-                    attr.defaultValue = defaultVal
-                else:
-                    attr.defaultText = defaultVal
+                attr.defaultValue = item[0]
                 element.attributes.append(attr)
         session.commit()
         self.set_flash_message('m', 'Saved')

@@ -8,9 +8,11 @@ def partial(handler, name, **kwargs):
         return handler.render_string(filename, **kwargs)
     return handler.render_string('System/PageNotExist', name=name)
     
-def iif(handler, cond, a):
+def iif(handler, cond, a, b=''):
     if cond:
         return a
+    else:
+        return b
         
 def v(handler, str):
     if not str:
