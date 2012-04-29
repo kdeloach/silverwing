@@ -184,15 +184,16 @@ var ElementRowView = Backbone.View.extend({
 });
 
 var ElementListToolbarView = Backbone.View.extend({
+    model: ElementList,
     events: {
         'click .btnDelete': 'deleteElements'
     },
     initialize: function() {
         this.btnDelete = this.$el.children('.btnDelete');
-        this.elements = this.options.elements || new ElementList();
+        this.model.bind('change', this.render, this);
     },
     render: function() {
-        if(this.elements.length > 0) {
+        if(this.checkedElems().length > 0) {
             this.btnDelete.removeClass('disabled');
         } else {
             this.btnDelete.addClass('disabled');
@@ -201,8 +202,13 @@ var ElementListToolbarView = Backbone.View.extend({
     },
     deleteElements: function(e) {
         e.preventDefault();
-        this.elements.each(function(elem) {
+        _.each(this.checkedElems(), function(elem) {
             elem.destroy();
+        });
+    },
+    checkedElems: function() {
+        return this.model.filter(function(elem) {
+            return elem.get('checked');
         });
     }
 });
@@ -211,8 +217,11 @@ var ElementListView = Backbone.View.extend({
     model: ElementList,
     initialize: function() {
         this.elemsTbody = this.options.elemsTblEl.children('tbody');
-        this.model.bind('change', this.renderToolbar, this);
         this.model.bind('destroy', this.render, this);
+        new ElementListToolbarView({
+            el: this.options.toolbarEl,
+            model: this.model
+        });
         this.render();
     },
     render: function() {
@@ -226,17 +235,7 @@ var ElementListView = Backbone.View.extend({
         } else {
             this.options.elemsTblEl.show();
         }
-        this.renderToolbar();
         return this;
-    },
-    renderToolbar: function() {
-        var checkedElems = this.model.filter(function(elem) {
-            return elem.get('checked');
-        });
-        new ElementListToolbarView({
-            el: this.options.toolbarEl,
-            elements: new ElementList(checkedElems)
-        }).render();
     }
 });
 
